@@ -111,7 +111,11 @@ static void read_radio()
         g.rc_1.set_pwm(periods[rcmap.roll()-1]);
         g.rc_2.set_pwm(periods[rcmap.pitch()-1]);
 
-        set_throttle_and_failsafe(periods[rcmap.throttle()-1]);
+        //Kill Switch check- Cut failsafe and normal flow of throttle settings if kill switch is on.
+        if(!kill_switch())
+        {
+            set_throttle_and_failsafe(periods[rcmap.throttle()-1]);
+        }
         set_throttle_zero_flag(g.rc_3.control_in);
 
         g.rc_4.set_pwm(periods[rcmap.yaw()-1]);
@@ -218,3 +222,20 @@ static void trim_radio()
     g.rc_4.save_eeprom();
 }
 
+
+//---------------------------------------------------------------------------------------------------------------
+//NEW CODE
+//---------------------------------------------------------------------------------------------------------------
+static bool kill_switch()
+{
+    //KillSwitch ??
+    if(g.rc_7.radio_in>RC_7_KILL_PWM)
+    {
+        //Kill Throttle and disarm motors
+        g.rc_3.set_pwm(KILL_THROTTLE_PWM);
+        set_mode(STABILIZE);
+       // init_disarm_motors(); //Add this if you want to disarm motors too
+        return true;
+    }
+  return false;
+}
